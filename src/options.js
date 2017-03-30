@@ -1,87 +1,86 @@
-'use strict';
+/* eslint-env browser */
+/* eslint no-console:0 */
+/* global chrome */
+let iconNum = 0;
 
-var iconNum = 0;
+const toggleCredentialInputs = instanceprofile => {
+  document.getElementById('accesskeyid').disabled = instanceprofile;
+  document.getElementById('secretaccesskey').disabled = instanceprofile;
+  document.getElementById('securitytoken').disabled = instanceprofile;
+};
 
-function save_options() {
-  var enabled = document.getElementById('enabled').checked;
-  var region = document.getElementById('region').value;
-  var service = document.getElementById('service').value;
-  var accesskeyid = document.getElementById('accesskeyid').value;
-  var secretaccesskey = document.getElementById('secretaccesskey').value;
-  var securitytoken = document.getElementById('securitytoken').value;
-  var credentialtype_instanceprofile = document.getElementById('credentialtype_instanceprofile').checked;
-  var credentialtype_explicit = document.getElementById('credentialtype_explicit').checked;
+document.addEventListener('DOMContentLoaded', () => {
+  chrome.storage.sync.get({
+    enabled: true,
+    region: 'ap-southeast-2',
+    service: 'es',
+    accesskeyid: '',
+    secretaccesskey: '',
+    securitytoken: '',
+    credentialTypeInstanceProfile: true,
+    credentialTypeExplicit: false,
+  }, items => {
+    document.getElementById('enabled').checked = items.enabled;
+    document.getElementById('region').value = items.region;
+    document.getElementById('service').value = items.service;
+    document.getElementById('accesskeyid').value = items.accesskeyid;
+    document.getElementById('secretaccesskey').value = items.secretaccesskey;
+    document.getElementById('securitytoken').value = items.securitytoken;
+    document.getElementById('credentialTypeInstanceProfile').checked = items.credentialTypeInstanceProfile;
+    document.getElementById('credentialTypeExplicit').checked = items.credentialTypeExplicit;
+    toggleCredentialInputs(items.credentialTypeInstanceProfile);
+  });
+});
+document.getElementById('credentialTypeInstanceProfile').addEventListener('click', e => {
+  toggleCredentialInputs(true);
+});
+document.getElementById('credentialTypeExplicit').addEventListener('click', e => {
+  toggleCredentialInputs(false);
+});
+document.getElementById('enabled').addEventListener('click', e => {
+  const enabled = e.srcElement.checked;
+  document.getElementById('region').disabled = !enabled;
+  document.getElementById('service').disabled = !enabled;
+  document.getElementById('credentialTypeInstanceProfile').disabled = !enabled;
+  document.getElementById('credentialTypeExplicit').disabled = !enabled;
+  if (!enabled) {
+    toggleCredentialInputs(true);
+  } else {
+    toggleCredentialInputs(document.getElementById('credentialTypeInstanceProfile').checked);
+  }
+});
+document.getElementById('save').addEventListener('click', () => {
+  const enabled = document.getElementById('enabled').checked;
+  const region = document.getElementById('region').value;
+  const service = document.getElementById('service').value;
+  const accesskeyid = document.getElementById('accesskeyid').value;
+  const secretaccesskey = document.getElementById('secretaccesskey').value;
+  const securitytoken = document.getElementById('securitytoken').value;
+  const credentialTypeInstanceProfile = document.getElementById('credentialTypeInstanceProfile').checked;
+  const credentialTypeExplicit = document.getElementById('credentialTypeExplicit').checked;
 
   chrome.storage.sync.set({
-	enabled: enabled,
-    region: region,
-	service: service,
-	accesskeyid: accesskeyid,
-	secretaccesskey: secretaccesskey,
-	securitytoken: securitytoken,
-	credentialtype_instanceprofile: credentialtype_instanceprofile,
-	credentialtype_explicit: credentialtype_explicit
-  }, function() {
-    var status = document.getElementById('status');
+    enabled,
+    region,
+    service,
+    accesskeyid,
+    secretaccesskey,
+    securitytoken,
+    credentialTypeInstanceProfile,
+    credentialTypeExplicit,
+  }, () => {
+    const status = document.getElementById('status');
     status.textContent = 'Options saved.';
-    setTimeout(function() {
+    setTimeout(() => {
       status.textContent = '';
     }, 1000);
   });
-}
-
-function restore_options() {
-  chrome.storage.sync.get({
-	enabled: true,
-    region: 'ap-southeast-2',
-	service: 'es',
-	accesskeyid: '',
-	secretaccesskey: '',
-	securitytoken: '',
-	credentialtype_instanceprofile: true,
-	credentialtype_explicit: false
-  }, function(items) {
-	document.getElementById('enabled').checked = items.enabled;
-	document.getElementById('region').value = items.region;
-	document.getElementById('service').value = items.service;
-	document.getElementById('accesskeyid').value = items.accesskeyid;
-	document.getElementById('secretaccesskey').value = items.secretaccesskey;
-	document.getElementById('securitytoken').value = items.securitytoken;
-	document.getElementById('credentialtype_instanceprofile').checked = items.credentialtype_instanceprofile;
-	document.getElementById('credentialtype_explicit').checked = items.credentialtype_explicit;
-	toggle_credential_inputs(items.credentialtype_instanceprofile);
-  });
-}
-function toggle_credential_inputs(instanceprofile) {
-	document.getElementById('accesskeyid').disabled = instanceprofile;
-	document.getElementById('secretaccesskey').disabled = instanceprofile;
-	document.getElementById('securitytoken').disabled = instanceprofile;
-}
-function toggle_settings(enabled) {
-	document.getElementById('region').disabled = !enabled;
-	document.getElementById('service').disabled = !enabled;
-	document.getElementById('credentialtype_instanceprofile').disabled = !enabled;
-	document.getElementById('credentialtype_explicit').disabled = !enabled;
-	if (!enabled)
-		toggle_credential_inputs(true);
-	else
-		toggle_credential_inputs(document.getElementById('credentialtype_instanceprofile').checked);
-}
-
-document.addEventListener('DOMContentLoaded', restore_options);
-document.getElementById('credentialtype_instanceprofile').addEventListener('click', function(e) {
-	toggle_credential_inputs(true);
 });
-document.getElementById('credentialtype_explicit').addEventListener('click', function(e) {
-	toggle_credential_inputs(false);
-});
-document.getElementById('enabled').addEventListener('click', function(e) {
-	toggle_settings(e.srcElement.checked);
-});
-document.getElementById('save').addEventListener('click', save_options);
 
-window.setInterval(function(){ 
-	document.getElementById('icon').src = 'icon-' + (iconNum++) + '.png';
-	if (iconNum > 2)
-		iconNum = 0;
+window.setInterval(() => {
+  iconNum += 1;
+  document.getElementById('icon').src = `icon-${iconNum}.png`;
+  if (iconNum > 2) {
+    iconNum = 0;
+  }
 }, 1000);
