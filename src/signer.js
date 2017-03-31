@@ -1,4 +1,3 @@
-/* eslint-env browser */
 /* eslint no-console:0 */
 /* global chrome, CryptoJS */
 const algorithm = 'AWS4-HMAC-SHA256';
@@ -69,13 +68,6 @@ const getinstanceprofilecredentials = () => {
   }
 };
 
-const getHost = url => {
-  const parser = document.createElement('a');
-  parser.href = url;
-  const host = parser.hostname.toLowerCase();
-  return host;
-};
-
 const getsettings = () => chrome.storage.sync.get({
   enabled: true,
   region: 'ap-southeast-2',
@@ -126,7 +118,10 @@ const valid = details => {
 
   // check that requested host matches configured service
   let hostMatchesService = false;
-  const hostname = getHost(details.url);
+  const parser = document.createElement('a');
+  parser.href = details.url;
+  const hostname = parser.hostname.toLowerCase();
+
   const hostparts = hostname.split('.');
   for (let i = 0; i < hostparts.length; i++) {
     const part = hostparts[i];
@@ -189,6 +184,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(request => {
   const headers = request.requestHeaders;
   const parser = document.createElement('a');
   parser.href = request.url;
+  headers.push({ name: 'Host', value: parser.hostname.toLowerCase() });
 
   // CanonicalUri
   let uri = parser.pathname;
@@ -253,7 +249,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(request => {
   const signedHeaders = tempSignedHeaders.sort().join(';');
   log(`Signed Headers: ${signedHeaders}`);
 
-  const canonicalRequest = `${request.method}\n${canonicalUri}\n${canonicalQuerystring}\n${canonicalHeaders}\n${signedHeaders}\n${hashedPayloads[request.requestId]}`;
+  const canonicalRequest = `${request.method}\n${canonicalUri}\n${canonicalQuerystring}\n${canonicalHeaders}\n\n${signedHeaders}\n${hashedPayloads[request.requestId]}`;
   log(`Canonical Request: ${canonicalRequest}`);
 
   const canonicalRequestHash = CryptoJS.SHA256(canonicalRequest);
@@ -262,22 +258,14 @@ chrome.webRequest.onBeforeSendHeaders.addListener(request => {
   const stringToSign = `${algorithm}\n${amzDateTime}\n${amzDate}/${region}/${service}/aws4_request\n${canonicalRequestHash}`;
   log(`String To Sign: ${stringToSign}`);
 
-  const sig = [amzDate, region, service, 'aws4_request', stringToSign].reduce((key, value) => CryptoJS.HmacSHA256(value, key), `AWS4${secretaccesskey}`);
-  const kDate = CryptoJS.HmacSHA256(amzDate, `AWS4${secretaccesskey}`);
-  const kRegion = CryptoJS.HmacSHA256(region, kDate);
-  const kService = CryptoJS.HmacSHA256(service, kRegion);
-  const kKey = CryptoJS.HmacSHA256('aws4_request', kService);
-  const signature = CryptoJS.HmacSHA256(stringToSign, kKey);
-  // TODO Ensure these are equal
+  const signature = [amzDate, region, service, 'aws4_request', stringToSign].reduce((key, value) => CryptoJS.HmacSHA256(value, key), `AWS4${secretaccesskey}`);
   log(`Signature: ${signature}`);
-  log(`Signature: ${sig}`);
 
   const authorization = `${algorithm} Credential=${accesskeyid}/${amzDate}/${region}/${service}/aws4_request, SignedHeaders=${signedHeaders}, Signature=${signature}`;
   log(`Authorization: ${authorization}`);
 
   headers.push({ name: 'X-Amz-Algorithm', value: algorithm });
   headers.push({ name: 'X-Amz-Date', value: amzDateTime });
-  headers.push({ name: 'Host', value: parser.hostname.toLowerCase() });
   headers.push({ name: 'Authorization', value: authorization });
   if (securitytoken) {
     headers.push({ name: 'X-Amz-Security-Token', value: securitytoken });
