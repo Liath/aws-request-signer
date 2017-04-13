@@ -61,8 +61,8 @@ document.getElementById('save').addEventListener('click', () => chrome.storage.s
 }));
 
 window.setInterval(() => {
-  iconNum += 1;
   document.getElementById('icon').src = `icon-${iconNum}.png`;
+  iconNum += 1;
   if (iconNum > 2) {
     iconNum = 0;
   }
