@@ -1,9 +1,12 @@
 {
   "env": {
     "es6": true,
-    "broswer": true
+    "browser": true
   },
-  "extends": ["airbnb", "google"],
+  "extends": [
+    "airbnb",
+    "google"
+  ],
   "parserOptions": {
     "sourceType": "module"
   },
@@ -25,17 +28,32 @@
       "always"
     ],
     "no-bitwise": 0,
-    "max-len": ["warn", {
-      "code": 120,
-      "comments": 120,
-      "ignoreStrings": true,
-      "ignoreTemplateLiterals": true
-    }],
+    "max-len": [
+      "warn",
+      {
+        "code": 120,
+        "comments": 120,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true
+      }
+    ],
     "no-plusplus": [
       "warn",
-      { "allowForLoopAfterthoughts": true }
+      {
+        "allowForLoopAfterthoughts": true
+      }
     ],
-    "arrow-parens": ["error", "as-needed"],
-    "import/no-extraneous-dependencies": ["error", {"devDependencies": true, "optionalDependencies": true, "peerDependencies": true}]
+    "arrow-parens": [
+      "error",
+      "as-needed"
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": true,
+        "optionalDependencies": true,
+        "peerDependencies": true
+      }
+    ]
   }
 }

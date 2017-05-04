@@ -158,11 +158,9 @@ chrome.webRequest.onBeforeRequest.addListener(details => {
 
   hashedPayloads[details.requestId] = hashedPayload;
   log(`Hashed Payload: ${hashedPayload}`);
-
-  return;
 },
-{ urls: ['*://*.amazonaws.com/*'],
-types: ['main_frame', 'sub_frame', 'stylesheet', 'script', 'image', 'font', 'object', 'xmlhttprequest', 'other'] },
+  { urls: ['*://*.amazonaws.com/*'],
+    types: ['main_frame', 'sub_frame', 'stylesheet', 'script', 'image', 'font', 'object', 'xmlhttprequest', 'other'] },
 ['blocking', 'requestBody']
 );
 
@@ -177,7 +175,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(request => {
   log(`Secret Access Key: ${secretaccesskey}`);
   log(`Security Token: ${securitytoken}`);
 
-  const amzDateTime = (new Date()).toISOString().replace(/[:\-]|\.\d{3}/g, '');
+  const amzDateTime = (new Date()).toISOString().replace(/[:-]|\.\d{3}/g, '');
   const amzDate = amzDateTime.substr(0, 8);
   log(`AmzDateTime: ${amzDateTime}`);
 
@@ -212,27 +210,26 @@ chrome.webRequest.onBeforeSendHeaders.addListener(request => {
   for (let i = 0; i < headers.length; i++) {
     const name = headers[i].name.toLowerCase();
 
-    if (name.includes('x-devtools-')) {
-      continue;
-    }
-
-    let headerfound = false;
-    for (let x = 0; x < aggregatedHeaders.length; x++) {
-      if (aggregatedHeaders[x].substr(0, name.length) === name) {
-        aggregatedHeaders[x] += headers[i].value.trim();
-        headerfound = true;
-        break;
+    if (!name.includes('x-devtools-')) {
+      let headerfound = false;
+      for (let x = 0; x < aggregatedHeaders.length; x++) {
+        if (aggregatedHeaders[x].substr(0, name.length) === name) {
+          aggregatedHeaders[x] += headers[i].value.trim();
+          headerfound = true;
+          break;
+        }
       }
-    }
 
-    if (!headerfound) {
-      aggregatedHeaders.push(`${name}:${headers[i].value}`);
+      if (!headerfound) {
+        aggregatedHeaders.push(`${name}:${headers[i].value}`);
+      }
     }
   }
   aggregatedHeaders.sort((a, b) => {
     const name1 = a.substr(0, a.indexOf(':'));
     const name2 = b.substr(0, b.indexOf(':'));
-    return (name1 < name2) ? -1 : (name1 > name2) ? 1 : 0;
+    if (name1 < name2) return -1;
+    return (name1 > name2) ? 1 : 0;
   });
   const canonicalHeaders = aggregatedHeaders.join('\n');
   log(`Canonical Headers: ${canonicalHeaders}`);
@@ -241,10 +238,9 @@ chrome.webRequest.onBeforeSendHeaders.addListener(request => {
   const tempSignedHeaders = [];
   for (let i = 0; i < headers.length; i++) {
     const name = headers[i].name.toLowerCase();
-    if (name.includes('x-devtools-')) {
-      continue;
+    if (!name.includes('x-devtools-')) {
+      tempSignedHeaders.push(name);
     }
-    tempSignedHeaders.push(name);
   }
   const signedHeaders = tempSignedHeaders.sort().join(';');
   log(`Signed Headers: ${signedHeaders}`);
